@@ -15,6 +15,7 @@
 
 #define PCIE0 5
 
+
 #define UP 2
 #define DOWN 4
 #define SET 8
@@ -24,7 +25,9 @@
 #define DI       PB6
 #define DO       PB5
 #define CS		 PD2
+#define BUZZER PD5
 
+void beep();
 void init();
 void initPinChangeInterrupts();
 void sendPacket(unsigned char addr, unsigned char data);
@@ -49,7 +52,6 @@ volatile char s;
 
 int main(void)
 {
-	char val;
 	// Возможно без этого кода "в железе" работать не будет 
 	// Crystal Oscillator division factor: 1 настройка предделителя
 	//#pragma optsize-
@@ -62,46 +64,64 @@ int main(void)
 	temperature = 0;
 	temp = 0;
 	init();
+	
 	while (1)
 	{
-	val = readtemp();
-	showValue(val);
+		temperature = readtemp();
+	
 		switch(state){
 			case waiting:
+				setMode(0);
 				if(tasks.set){
 					temp = temperature;
 					state = setting;
+					tasks.set = false;
 				}
+				showValue(temperature);
 				break;
 			case setting:
-				if(tasks.up)
+				setMode(1);
+				if(tasks.up){
 					temp++;
-				if(tasks.down)
+					tasks.up = false;
+					}
+				if(tasks.down){
 					temp--;
-				if(tasks.reset)
+					tasks.down = false;
+					}
+				if(tasks.reset){
 					temp = 0;
+					tasks.reset = false;
+					}
 				if(tasks.set){
 					temperature = temp;
 					state = waiting;
+					tasks.set = false;
 				}
-		}
-
-		
+				showValue(temp);
+				break;
+		}	
 	}
 }
 
 void init(){
-	DDRB = 0x1E;
+	DDRB = 0x0;
 	PORTB = 0;
 
-	DDRD |= 1<<CS;
-	PORTD |= 1<<CS;
+	DDRD |= 1<<CS|1<<BUZZER;
+	PORTD |= 1<<CS|0<<BUZZER;
 	initPinChangeInterrupts();
 	ledInit();
 	//dsInit(PORTB,DDRB, PINB,0);
 	dsInit(PD0,DDD0, PINB0,0);
+	beep();
 }
 
+void beep(){
+	PORTD |= 1<<BUZZER;
+	_delay_ms(100);
+	PORTD &= ~(1<<BUZZER);
+}
 
 void initPinChangeInterrupts(){
 	GIMSK |= 1<<PCIE0; 
@@ -117,19 +137,15 @@ void initPinChangeInterrupts(){
 ISR(PCINT_vect){
 	if(PINB & UP){
 		tasks.up = true;
-		//spiSend(0xff);
-		//PORTD = 0x4; 
 	}
 	if(PINB & DOWN){
 		tasks.down = true;
-		//PORTD = 0x8; 
 	}
 	if(PINB & SET){
-		tasks.set = true;
-		//PORTD = 0x10; 
+		//if(tasks.set == false)
+			tasks.set = true;
 	}
 	if(PINB & RESET){
 		tasks.reset = true;
-		//PORTD = 0x20; 
 	}
 }
