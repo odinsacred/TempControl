@@ -2,5 +2,9 @@
 # Automatically-generated file. Do not edit or delete the file
 ################################################################################
 
+7SegLed\7segLed.c
+
+DS18B20\ds18b20.c
+
 main.c
 
