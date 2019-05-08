@@ -8,7 +8,6 @@
 #define F_CPU 8000000UL
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#include <stdbool.h>
 #include <util/delay.h>
 #include "DS18B20/ds18b20.h"
 #include "7SegLed/7segLed.h"
@@ -27,14 +26,26 @@
 #define CS		 PD2
 #define BUZZER PD5
 
-void beep();
+ #define NORMAL_MODE 0
+ #define SETTING_MODE 1
+ #define ALARM_MODE 2
+ #define LOAD_MODE 3
+ #define NORMAL_TEMP 30
+
+ #define CELCIUS_SYMBOL 0b01100011
+ #define SETTING_SYMBOL 0b00011101
+ #define ALARM_SYMBOL 0b01110111
+
+//void beep();
+//объявление функций статическими дает экономию памяти, если эти функции находятся в других файлах...
 void init();
-void initPinChangeInterrupts();
-void sendPacket(unsigned char addr, unsigned char data);
+inline void initPinChangeInterrupts();
 
 enum states{
 	waiting,
-	setting
+	setting,
+	alarm,
+	ack_alarm
 };
 
 struct {
@@ -44,11 +55,10 @@ struct {
 	unsigned int reset : 1;
 }tasks;
 
-unsigned int temperature;
-unsigned int temp;
+unsigned char temperature;
 enum states state;
 
-volatile char s;
+unsigned char settingTemp;
 
 int main(void)
 {
@@ -60,45 +70,58 @@ int main(void)
 	//#ifdef _OPTIMIZE_SIZE_
 	//#pragma optsize+
 	//#endif
+	settingTemp = NORMAL_TEMP;
 	state = waiting;
 	temperature = 0;
-	temp = 0;
 	init();
-	
 	while (1)
 	{
-		temperature = readtemp();
+		temperature = getTemp();
 	
 		switch(state){
 			case waiting:
-				setMode(0);
 				if(tasks.set){
-					temp = temperature;
 					state = setting;
-					tasks.set = false;
+					tasks.set = 0;
 				}
-				showValue(temperature);
+				ledShowValue(temperature, CELCIUS_SYMBOL);
+				if(temperature > settingTemp){
+					state = alarm;
+				}
 				break;
 			case setting:
-				setMode(1);
 				if(tasks.up){
-					temp++;
-					tasks.up = false;
+					settingTemp++;
+					tasks.up = 0;
 					}
 				if(tasks.down){
-					temp--;
-					tasks.down = false;
-					}
-				if(tasks.reset){
-					temp = 0;
-					tasks.reset = false;
+					settingTemp--;
+					tasks.down = 0;
 					}
 				if(tasks.set){
-					temperature = temp;
 					state = waiting;
-					tasks.set = false;
+					tasks.set = 0;
 				}
-				showValue(temp);
+				ledShowValue(settingTemp,SETTING_SYMBOL);
+				break;
+			case alarm:
+				PORTD |= 1<<BUZZER;
+				ledShowValue(temperature,ALARM_SYMBOL);
+				if(tasks.set){
+					state = ack_alarm;
+					tasks.set = 0;
+				}
+				break;
+			case ack_alarm:
+				PORTD &= ~(1<<BUZZER);
+				ledShowValue(temperature,ALARM_SYMBOL);
+				if(temperature < settingTemp){
+					state = waiting;
+				}
+				if(tasks.set){
+					state = setting;
+					tasks.set = 0;
+				}
 				break;
 		}	
 	}
@@ -112,9 +135,7 @@ void init(){
 	PORTD |= 1<<CS|0<<BUZZER;
 	initPinChangeInterrupts();
 	ledInit();
-	//dsInit(PORTB,DDRB, PINB,0);
-	dsInit(PD0,DDD0, PINB0,0);
-	beep();
+	//beep();
 }
 
 void beep(){
@@ -122,6 +143,7 @@ void beep(){
 	_delay_ms(100);
 	PORTD &= ~(1<<BUZZER);
 }
+
 
 void initPinChangeInterrupts(){
 	GIMSK |= 1<<PCIE0; 
@@ -131,21 +153,17 @@ void initPinChangeInterrupts(){
 
 
 
-
-
-
 ISR(PCINT_vect){
 	if(PINB & UP){
-		tasks.up = true;
+		tasks.up = 1;
 	}
 	if(PINB & DOWN){
-		tasks.down = true;
+		tasks.down = 1;
 	}
 	if(PINB & SET){
-		//if(tasks.set == false)
-			tasks.set = true;
+		tasks.set = 1;
 	}
-	if(PINB & RESET){
-		tasks.reset = true;
-	}
+	//if(PINB & RESET){
+		//tasks.reset = 1;
+	//}
 }
