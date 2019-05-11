@@ -39,13 +39,15 @@
 //void beep();
 //объявление функций статическими дает экономию памяти, если эти функции находятся в других файлах...
 void init();
+void timer0Init();
 inline void initPinChangeInterrupts();
 
 enum states{
 	waiting,
 	setting,
 	alarm,
-	ack_alarm
+	ack_alarm,
+	poll
 };
 
 struct {
@@ -76,7 +78,7 @@ int main(void)
 	init();
 	while (1)
 	{
-		temperature = getTemp();
+		
 	
 		switch(state){
 			case waiting:
@@ -123,11 +125,17 @@ int main(void)
 					tasks.set = 0;
 				}
 				break;
+			case poll:
+				temperature = getTemp();
+				state = waiting;
+				break;
 		}	
 	}
+	return 0;
 }
 
 void init(){
+	cli();
 	DDRB = 0x0;
 	PORTB = 0;
 
@@ -135,7 +143,15 @@ void init(){
 	PORTD |= 1<<CS|0<<BUZZER;
 	initPinChangeInterrupts();
 	ledInit();
+	timer0Init();
 	//beep();
+	sei();
+}
+
+void timer0Init(){
+	GTCCR |= 1<<PSR10; // сброс предделителя
+	TIMSK |= 1<<TOIE0; // разрешение прерывания	
+	TCCR0B |= 1<<CS00 | 0<<CS01 | 1<<CS02;// делитель на 1024
 }
 
 void beep(){
@@ -166,4 +182,13 @@ ISR(PCINT_vect){
 	//if(PINB & RESET){
 		//tasks.reset = 1;
 	//}
+}
+
+unsigned char clc = 0;
+ISR(TIMER0_OVF_vect	){	
+++clc;
+if(clc == 5){
+	state = poll;
+	clc=0;
+	}
 }
