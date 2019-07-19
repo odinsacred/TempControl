@@ -120,25 +120,39 @@
     </ToolchainSettings>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="7SegLed\7segLed.c">
+    <Compile Include="7segLed.c">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="7SegLed\7segLed.h">
+    <Compile Include="7segLed.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="DS18B20\ds18b20.c">
+    <Compile Include="crc_8_dallas.c">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="DS18B20\ds18b20.h">
+    <Compile Include="crc_8_dallas.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="ds18b20.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="ds18b20.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="main.c">
       <SubType>compile</SubType>
     </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="DS18B20" />
-    <Folder Include="7SegLed" />
+    <Compile Include="soft_timer.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="soft_timer.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="usart.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="usart.h">
+      <SubType>compile</SubType>
+    </Compile>
   </ItemGroup>
   <Import Project="$(AVRSTUDIO_EXE_PATH)\\Vs\\Compiler.targets" />
 </Project>
