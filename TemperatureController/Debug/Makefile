@@ -40,9 +40,9 @@ C_SRCS +=  \
 ../7segLed.c \
 ../crc_8_dallas.c \
 ../ds18b20.c \
+../keyboard.c \
 ../main.c \
-../soft_timer.c \
-../usart.c
+../soft_timer.c
 
 
 PREPROCESSING_SRCS += 
@@ -55,33 +55,33 @@ OBJS +=  \
 7segLed.o \
 crc_8_dallas.o \
 ds18b20.o \
+keyboard.o \
 main.o \
-soft_timer.o \
-usart.o
+soft_timer.o
 
 OBJS_AS_ARGS +=  \
 7segLed.o \
 crc_8_dallas.o \
 ds18b20.o \
+keyboard.o \
 main.o \
-soft_timer.o \
-usart.o
+soft_timer.o
 
 C_DEPS +=  \
 7segLed.d \
 crc_8_dallas.d \
 ds18b20.d \
+keyboard.d \
 main.d \
-soft_timer.d \
-usart.d
+soft_timer.d
 
 C_DEPS_AS_ARGS +=  \
 7segLed.d \
 crc_8_dallas.d \
 ds18b20.d \
+keyboard.d \
 main.d \
-soft_timer.d \
-usart.d
+soft_timer.d
 
 OUTPUT_FILE_PATH +=TemperatureController.elf
 
@@ -118,6 +118,13 @@ LINKER_SCRIPT_DEP+=
 	@echo Finished building: $<
 	
 
+./keyboard.o: .././keyboard.c
+	@echo Building file: $<
+	@echo Invoking: AVR/GNU C Compiler : 5.4.0
+	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -I"C:\Program Files (x86)\Atmel\Studio\7.0\Packs\Atmel\ATtiny_DFP\1.3.229\include"  -O1 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -g2 -Wall -mmcu=attiny2313 -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\Atmel\ATtiny_DFP\1.3.229\gcc\dev\attiny2313" -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 
+	@echo Finished building: $<
+	
+
 ./main.o: .././main.c
 	@echo Building file: $<
 	@echo Invoking: AVR/GNU C Compiler : 5.4.0
@@ -126,13 +133,6 @@ LINKER_SCRIPT_DEP+=
 	
 
 ./soft_timer.o: .././soft_timer.c
-	@echo Building file: $<
-	@echo Invoking: AVR/GNU C Compiler : 5.4.0
-	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -I"C:\Program Files (x86)\Atmel\Studio\7.0\Packs\Atmel\ATtiny_DFP\1.3.229\include"  -O1 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -g2 -Wall -mmcu=attiny2313 -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\Atmel\ATtiny_DFP\1.3.229\gcc\dev\attiny2313" -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 
-	@echo Finished building: $<
-	
-
-./usart.o: .././usart.c
 	@echo Building file: $<
 	@echo Invoking: AVR/GNU C Compiler : 5.4.0
 	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -I"C:\Program Files (x86)\Atmel\Studio\7.0\Packs\Atmel\ATtiny_DFP\1.3.229\include"  -O1 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -g2 -Wall -mmcu=attiny2313 -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\Atmel\ATtiny_DFP\1.3.229\gcc\dev\attiny2313" -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 

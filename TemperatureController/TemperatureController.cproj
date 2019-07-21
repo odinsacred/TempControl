@@ -138,6 +138,12 @@
     <Compile Include="ds18b20.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="keyboard.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="keyboard.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="main.c">
       <SubType>compile</SubType>
     </Compile>
@@ -145,12 +151,6 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="soft_timer.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="usart.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="usart.h">
       <SubType>compile</SubType>
     </Compile>
   </ItemGroup>

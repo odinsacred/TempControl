@@ -6,20 +6,12 @@
 */
 
 #define F_CPU 4000000UL
-#include <avr/io.h>
-#include <avr/interrupt.h>
-#include <util/delay.h>
+
 #include "ds18b20.h"
 #include "7segLed.h"
 #include "soft_timer.h"
-
+#include "keyboard.h"
 #define PCIE0 5
-
-
-#define UP 2
-#define DOWN 4
-#define SET 8
-#define RESET 16
 
 #define UCSK     PB7
 #define DI       PB6
@@ -40,11 +32,11 @@
 
 #define POLL_TIMEOUT 100
 #define BUZZ_PERIOD 500
+#define CHATTER_PERIOD 100
 
 void beep();
 //объявление функций статическими дает экономию памяти, если эти функции находятся в других файлах...
 void main_init();
-inline void init_pin_change_interrupts();
 
 enum states{
 	waiting,
@@ -53,12 +45,7 @@ enum states{
 	ack_alarm
 };
 
-struct {
-	unsigned int up : 1;
-	unsigned int down : 1;
-	unsigned int set : 1;
-	unsigned int reset : 1;
-}tasks;
+
 
 uint8_t temperature;
 enum states state;
@@ -66,18 +53,11 @@ enum states state;
 uint8_t settingTemp;
 size_t _poll_timer = 0;
 size_t _buzz_timer = 0;
+size_t _chatter_timer = 0;
 
 int main(void)
 {
-
-	// Возможно без этого кода "в железе" работать не будет
-	// Crystal Oscillator division factor: 1 настройка предделителя
-	//#pragma optsize-
-	//CLKPR=0x80;
-	//CLKPR=0x00;
-	//#ifdef _OPTIMIZE_SIZE_
-	//#pragma optsize+
-	//#endif
+    struct tasks task_list;
 	settingTemp = NORMAL_TEMP;
 	state = waiting;
 	temperature = 0;
@@ -89,11 +69,16 @@ int main(void)
 			timer_restart(_poll_timer,POLL_TIMEOUT);
 		}
 
+		if(timer_check(_chatter_timer)==TIMER_OUT){
+			keyboard_refresh(&task_list);
+			timer_restart(_chatter_timer,CHATTER_PERIOD);
+		}
+
 		switch(state){
 			case waiting:
-			if(tasks.set){
+			if(task_list.set){			
 				state = setting;
-				tasks.set = 0;
+				task_list.set = 0;
 			}
 			led_show_value(temperature, CELCIUS_SYMBOL);
 			if(temperature > settingTemp){
@@ -101,37 +86,37 @@ int main(void)
 			}
 			break;
 			case setting:
-			if(tasks.up){
+			if(task_list.up){
 				settingTemp++;
-				tasks.up = 0;
+				task_list.up = 0;
 			}
-			if(tasks.down){
+			if(task_list.down){
 				settingTemp--;
-				tasks.down = 0;
+				task_list.down = 0;
 			}
-			if(tasks.set){
+			if(task_list.set){
 				state = waiting;
-				tasks.set = 0;
+				task_list.set = 0;
 			}
 			led_show_value(settingTemp,SETTING_SYMBOL);
 			break;
 			case alarm:
-			PORTD |= 1<<BUZZER;
+			//PORTD |= 1<<BUZZER;
 			led_show_value(temperature,ALARM_SYMBOL);
-			if(tasks.set){
+			if(task_list.set){
 				state = ack_alarm;
-				tasks.set = 0;
+				task_list.set = 0;
 			}
 			break;
 			case ack_alarm:
-			PORTD &= ~(1<<BUZZER);
+			//PORTD &= ~(1<<BUZZER);
 			led_show_value(temperature,ALARM_SYMBOL);
 			if(temperature < settingTemp){
 				state = waiting;
 			}
-			if(tasks.set){
+			if(task_list.set){
 				state = setting;
-				tasks.set = 0;
+				task_list.set = 0;
 			}
 			break;
 		}
@@ -147,40 +132,24 @@ void main_init(){
 	DDRD |= 1<<CS|1<<BUZZER;
 	PORTD |= 1<<CS|0<<BUZZER;
 	ACSR |=1<<ACD; // отключение АЦП
-	init_pin_change_interrupts();
+	//init_pin_change_interrupts();
 	led_init();
 	//timer0Init();
 	timer_init_soft_timer();
+	_chatter_timer = timer_create(CHATTER_PERIOD);
 	_poll_timer = timer_create(POLL_TIMEOUT);
 	_buzz_timer = timer_create(BUZZ_PERIOD);
-	beep();
+	//beep();
 	sei();
 }
 
 void beep(){
-	PORTD |= 1<<BUZZER;
-	_delay_ms(100);
-	PORTD &= ~(1<<BUZZER);
-}
-
-
-void init_pin_change_interrupts(){
-	GIMSK |= 1<<PCIE0;
-	PCMSK |= 1<<PCINT1|1<<PCINT2|1<<PCINT3|1<<PCINT4;
-	sei();
+	//PORTD |= 1<<BUZZER;
+	//_delay_ms(100);
+	//PORTD &= ~(1<<BUZZER);
 }
 
 
 
-ISR(PCINT_vect){
-	if(PINB & UP){
-		tasks.up = 1;
-	}
-	if(PINB & DOWN){
-		tasks.down = 1;
-	}
-	if(PINB & SET){
-		tasks.set = 1;
-	}
 
-}
+
