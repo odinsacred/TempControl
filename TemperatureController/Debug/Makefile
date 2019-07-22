@@ -38,6 +38,7 @@ SUBDIRS :=
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS +=  \
 ../7segLed.c \
+../buzzer.c \
 ../crc_8_dallas.c \
 ../ds18b20.c \
 ../keyboard.c \
@@ -53,6 +54,7 @@ ASM_SRCS +=
 
 OBJS +=  \
 7segLed.o \
+buzzer.o \
 crc_8_dallas.o \
 ds18b20.o \
 keyboard.o \
@@ -61,6 +63,7 @@ soft_timer.o
 
 OBJS_AS_ARGS +=  \
 7segLed.o \
+buzzer.o \
 crc_8_dallas.o \
 ds18b20.o \
 keyboard.o \
@@ -69,6 +72,7 @@ soft_timer.o
 
 C_DEPS +=  \
 7segLed.d \
+buzzer.d \
 crc_8_dallas.d \
 ds18b20.d \
 keyboard.d \
@@ -77,6 +81,7 @@ soft_timer.d
 
 C_DEPS_AS_ARGS +=  \
 7segLed.d \
+buzzer.d \
 crc_8_dallas.d \
 ds18b20.d \
 keyboard.d \
@@ -98,6 +103,13 @@ LINKER_SCRIPT_DEP+=
 
 # AVR32/GNU C Compiler
 ./7segLed.o: .././7segLed.c
+	@echo Building file: $<
+	@echo Invoking: AVR/GNU C Compiler : 5.4.0
+	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -I"C:\Program Files (x86)\Atmel\Studio\7.0\Packs\Atmel\ATtiny_DFP\1.3.229\include"  -O1 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -g2 -Wall -mmcu=attiny2313 -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\Atmel\ATtiny_DFP\1.3.229\gcc\dev\attiny2313" -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 
+	@echo Finished building: $<
+	
+
+./buzzer.o: .././buzzer.c
 	@echo Building file: $<
 	@echo Invoking: AVR/GNU C Compiler : 5.4.0
 	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -I"C:\Program Files (x86)\Atmel\Studio\7.0\Packs\Atmel\ATtiny_DFP\1.3.229\include"  -O1 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -g2 -Wall -mmcu=attiny2313 -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\Atmel\ATtiny_DFP\1.3.229\gcc\dev\attiny2313" -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 

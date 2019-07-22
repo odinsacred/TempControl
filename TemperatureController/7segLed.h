@@ -12,4 +12,6 @@
 
  void led_init();
  void led_show_value(uint8_t value, char symbol);
+ void led_shutdown_mode_on();
+ void led_shutdown_mode_off();
 #endif /* 7SEGLED_H_ */

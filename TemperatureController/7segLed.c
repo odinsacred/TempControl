@@ -14,7 +14,7 @@
 #define INFO_POS 4
 
 void led_shutdown_mode_on();
-static void led_shutdown_mode_off();
+void led_shutdown_mode_off();
 void led_display_test();
 void led_display_test_off();
 static void led_decode_mode_on();

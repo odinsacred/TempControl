@@ -11,13 +11,14 @@
 #include "7segLed.h"
 #include "soft_timer.h"
 #include "keyboard.h"
+#include "buzzer.h"
 #define PCIE0 5
 
 #define UCSK     PB7
 #define DI       PB6
 #define DO       PB5
 #define CS		 PD2
-#define BUZZER PD5
+
 
 #define NORMAL_MODE 0
 #define SETTING_MODE 1
@@ -33,6 +34,7 @@
 #define POLL_TIMEOUT 100
 #define BUZZ_PERIOD 500
 #define CHATTER_PERIOD 100
+#define SHUTDOWN_TIMEOUT 5000
 
 void beep();
 //объявление функций статическими дает экономию памяти, если эти функции находятся в других файлах...
@@ -42,6 +44,8 @@ enum states{
 	waiting,
 	setting,
 	alarm,
+	pre_alarm,
+	pre_set,
 	ack_alarm
 };
 
@@ -54,7 +58,7 @@ uint8_t settingTemp;
 size_t _poll_timer = 0;
 size_t _buzz_timer = 0;
 size_t _chatter_timer = 0;
-
+size_t _shutdown_timer = 0;
 int main(void)
 {
     struct tasks task_list;
@@ -73,52 +77,76 @@ int main(void)
 			keyboard_refresh(&task_list);
 			timer_restart(_chatter_timer,CHATTER_PERIOD);
 		}
-
+		
 		switch(state){
 			case waiting:
-			if(task_list.set){			
-				state = setting;
-				task_list.set = 0;
-			}
-			led_show_value(temperature, CELCIUS_SYMBOL);
-			if(temperature > settingTemp){
-				state = alarm;
-			}
+				if(timer_check(_shutdown_timer)==TIMER_OUT){
+					led_shutdown_mode_on();
+					timer_restart(_shutdown_timer, SHUTDOWN_TIMEOUT);
+				}
+				if(task_list.set){
+					led_shutdown_mode_off();								
+					timer_restart(_shutdown_timer, SHUTDOWN_TIMEOUT);
+					task_list.set = 0;
+					state = pre_set;
+				}
+				led_show_value(temperature, CELCIUS_SYMBOL);
+				if(temperature > settingTemp){
+					state = pre_alarm;
+				}
+
+			break;
+			case pre_set:
+				if(timer_check(_shutdown_timer)==TIMER_OUT){
+					state = waiting;
+				}
+				if(task_list.set){					
+					task_list.set = 0;
+					state = setting;
+				}
 			break;
 			case setting:
-			if(task_list.up){
-				settingTemp++;
-				task_list.up = 0;
-			}
-			if(task_list.down){
-				settingTemp--;
-				task_list.down = 0;
-			}
-			if(task_list.set){
-				state = waiting;
-				task_list.set = 0;
-			}
-			led_show_value(settingTemp,SETTING_SYMBOL);
-			break;
+				led_show_value(settingTemp,SETTING_SYMBOL);
+				if(task_list.up){
+					settingTemp++;
+					task_list.up = 0;
+				}
+				if(task_list.down){
+					settingTemp--;
+					task_list.down = 0;
+				}
+				if(task_list.set){
+					timer_restart(_shutdown_timer,SHUTDOWN_TIMEOUT);
+					state = waiting;
+					task_list.set = 0;
+				}
+				
+				break;
+			case pre_alarm: 
+				led_shutdown_mode_off();
+				state = alarm;
+				break;
 			case alarm:
-			//PORTD |= 1<<BUZZER;
-			led_show_value(temperature,ALARM_SYMBOL);
-			if(task_list.set){
-				state = ack_alarm;
-				task_list.set = 0;
-			}
-			break;
+				buzzer_on();
+				led_show_value(temperature,ALARM_SYMBOL);
+				if(task_list.set){
+					state = ack_alarm;
+					task_list.set = 0;
+				}
+				break;
 			case ack_alarm:
-			//PORTD &= ~(1<<BUZZER);
-			led_show_value(temperature,ALARM_SYMBOL);
-			if(temperature < settingTemp){
-				state = waiting;
-			}
-			if(task_list.set){
-				state = setting;
-				task_list.set = 0;
-			}
-			break;
+				buzzer_off();
+				led_show_value(temperature,ALARM_SYMBOL);
+				if(temperature < settingTemp){
+					state = waiting;
+					timer_restart(_shutdown_timer,SHUTDOWN_TIMEOUT);
+				}
+				if(task_list.set){
+					state = setting;
+					task_list.set = 0;
+					led_shutdown_mode_off();
+				}
+				break;
 		}
 	}
 	return 0;
@@ -126,19 +154,18 @@ int main(void)
 
 void main_init(){
 	cli();
-	DDRB = 0x00;
-	PORTB = 0x00;
+	
 
-	DDRD |= 1<<CS|1<<BUZZER;
-	PORTD |= 1<<CS|0<<BUZZER;
-	ACSR |=1<<ACD; // отключение АЦП
-	//init_pin_change_interrupts();
+	DDRD |= 1<<CS;
+	PORTD |= 1<<CS;
+	ACSR |=1<<ACD; // отключение компаратора
 	led_init();
-	//timer0Init();
 	timer_init_soft_timer();
 	_chatter_timer = timer_create(CHATTER_PERIOD);
 	_poll_timer = timer_create(POLL_TIMEOUT);
 	_buzz_timer = timer_create(BUZZ_PERIOD);
+	_shutdown_timer = timer_create(SHUTDOWN_TIMEOUT);
+	buzzer_init();
 	//beep();
 	sei();
 }

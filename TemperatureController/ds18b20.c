@@ -35,7 +35,7 @@
  static uint16_t t = 0;
  //static uint8_t ds18b20_check_sum(uint8_t data[], uint8_t length);
  #define MEMORY_LENGTH 9
- 
+ #define INIT_TEMP 85
 
 // Start transaction with 1-wire line.
 void ds18b20_init(void)
@@ -94,7 +94,8 @@ void ds18b20_write_command(uint8_t data)
 }
 
 uint8_t ds18b20_get_temp(){	
-	return ds18b20_read_temp();
+	uint8_t temp = ds18b20_read_temp();
+	return temp == INIT_TEMP ? 0 : temp;
 }
 //≈сли разместить массив локально - количество зан€той пам€ти программ увеличиваетс€
 //≈сли разместить переменную локально - количество зан€той пам€ти программ уменьшаетс€

@@ -4,6 +4,8 @@
 
 7segLed.c
 
+buzzer.c
+
 crc_8_dallas.c
 
 ds18b20.c

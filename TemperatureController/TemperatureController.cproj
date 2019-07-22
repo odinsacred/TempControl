@@ -126,6 +126,12 @@
     <Compile Include="7segLed.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="buzzer.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="buzzer.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="crc_8_dallas.c">
       <SubType>compile</SubType>
     </Compile>
