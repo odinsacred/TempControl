@@ -10,6 +10,8 @@ crc_8_dallas.c
 
 ds18b20.c
 
+eeprom.c
+
 keyboard.c
 
 main.c

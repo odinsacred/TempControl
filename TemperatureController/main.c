@@ -12,6 +12,8 @@
 #include "soft_timer.h"
 #include "keyboard.h"
 #include "buzzer.h"
+#include "eeprom.h"
+
 #define PCIE0 5
 
 #define UCSK     PB7
@@ -19,7 +21,7 @@
 #define DO       PB5
 #define CS		 PD2
 
-
+#define EEPROM_ADDRESS 0
 #define NORMAL_MODE 0
 #define SETTING_MODE 1
 #define ALARM_MODE 2
@@ -34,7 +36,7 @@
 #define POLL_TIMEOUT 100
 #define BUZZ_PERIOD 500
 #define CHATTER_PERIOD 100
-#define SHUTDOWN_TIMEOUT 5000
+#define SHUTDOWN_TIMEOUT 10000
 
 void beep();
 //объявление функций статическими дает экономию памяти, если эти функции находятся в других файлах...
@@ -54,7 +56,7 @@ enum states{
 uint8_t temperature;
 enum states state;
 
-uint8_t settingTemp;
+uint8_t _setting_temp;
 size_t _poll_timer = 0;
 size_t _buzz_timer = 0;
 size_t _chatter_timer = 0;
@@ -62,7 +64,7 @@ size_t _shutdown_timer = 0;
 int main(void)
 {
     struct tasks task_list;
-	settingTemp = NORMAL_TEMP;
+	_setting_temp = eeprom_read(EEPROM_ADDRESS);//NORMAL_TEMP;
 	state = waiting;
 	temperature = 0;
 	main_init();
@@ -91,7 +93,7 @@ int main(void)
 					state = pre_set;
 				}
 				led_show_value(temperature, CELCIUS_SYMBOL);
-				if(temperature > settingTemp){
+				if(temperature > _setting_temp){
 					state = pre_alarm;
 				}
 
@@ -106,16 +108,18 @@ int main(void)
 				}
 			break;
 			case setting:
-				led_show_value(settingTemp,SETTING_SYMBOL);
+				led_show_value(_setting_temp,SETTING_SYMBOL);
 				if(task_list.up){
-					settingTemp++;
+					_setting_temp++;
 					task_list.up = 0;
 				}
 				if(task_list.down){
-					settingTemp--;
+					_setting_temp--;
 					task_list.down = 0;
 				}
 				if(task_list.set){
+
+					eeprom_write(EEPROM_ADDRESS,_setting_temp);
 					timer_restart(_shutdown_timer,SHUTDOWN_TIMEOUT);
 					state = waiting;
 					task_list.set = 0;
@@ -137,7 +141,7 @@ int main(void)
 			case ack_alarm:
 				buzzer_off();
 				led_show_value(temperature,ALARM_SYMBOL);
-				if(temperature < settingTemp){
+				if(temperature < _setting_temp){
 					state = waiting;
 					timer_restart(_shutdown_timer,SHUTDOWN_TIMEOUT);
 				}
@@ -166,6 +170,7 @@ void main_init(){
 	_buzz_timer = timer_create(BUZZ_PERIOD);
 	_shutdown_timer = timer_create(SHUTDOWN_TIMEOUT);
 	buzzer_init();
+	eeprom_init();
 	//beep();
 	sei();
 }

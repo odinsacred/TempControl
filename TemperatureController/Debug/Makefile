@@ -41,6 +41,7 @@ C_SRCS +=  \
 ../buzzer.c \
 ../crc_8_dallas.c \
 ../ds18b20.c \
+../eeprom.c \
 ../keyboard.c \
 ../main.c \
 ../soft_timer.c
@@ -57,6 +58,7 @@ OBJS +=  \
 buzzer.o \
 crc_8_dallas.o \
 ds18b20.o \
+eeprom.o \
 keyboard.o \
 main.o \
 soft_timer.o
@@ -66,6 +68,7 @@ OBJS_AS_ARGS +=  \
 buzzer.o \
 crc_8_dallas.o \
 ds18b20.o \
+eeprom.o \
 keyboard.o \
 main.o \
 soft_timer.o
@@ -75,6 +78,7 @@ C_DEPS +=  \
 buzzer.d \
 crc_8_dallas.d \
 ds18b20.d \
+eeprom.d \
 keyboard.d \
 main.d \
 soft_timer.d
@@ -84,6 +88,7 @@ C_DEPS_AS_ARGS +=  \
 buzzer.d \
 crc_8_dallas.d \
 ds18b20.d \
+eeprom.d \
 keyboard.d \
 main.d \
 soft_timer.d
@@ -124,6 +129,13 @@ LINKER_SCRIPT_DEP+=
 	
 
 ./ds18b20.o: .././ds18b20.c
+	@echo Building file: $<
+	@echo Invoking: AVR/GNU C Compiler : 5.4.0
+	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -I"C:\Program Files (x86)\Atmel\Studio\7.0\Packs\Atmel\ATtiny_DFP\1.3.229\include"  -O1 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -g2 -Wall -mmcu=attiny2313 -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\Atmel\ATtiny_DFP\1.3.229\gcc\dev\attiny2313" -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 
+	@echo Finished building: $<
+	
+
+./eeprom.o: .././eeprom.c
 	@echo Building file: $<
 	@echo Invoking: AVR/GNU C Compiler : 5.4.0
 	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -I"C:\Program Files (x86)\Atmel\Studio\7.0\Packs\Atmel\ATtiny_DFP\1.3.229\include"  -O1 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -g2 -Wall -mmcu=attiny2313 -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\Atmel\ATtiny_DFP\1.3.229\gcc\dev\attiny2313" -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 

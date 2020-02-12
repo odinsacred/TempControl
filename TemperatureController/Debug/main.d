@@ -18,7 +18,7 @@ main.d main.o: .././main.c .././ds18b20.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\lib\gcc\avr\5.4.0\include\stddef.h \
  .././crc_8_dallas.h .././7segLed.h .././soft_timer.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\stdlib.h \
- .././keyboard.h .././buzzer.h
+ .././keyboard.h .././buzzer.h .././eeprom.h
 
 .././ds18b20.h:
 
@@ -67,3 +67,5 @@ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\
 .././keyboard.h:
 
 .././buzzer.h:
+
+.././eeprom.h:
